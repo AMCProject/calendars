@@ -28,8 +28,7 @@ func (a *CalendarAPI) PostCalendarHandler(c echo.Context) error {
 		return NewErrorResponse(c, err)
 	}
 	for _, cal := range calendar {
-		meal, _ := Microservices.GetMeal(cal.UserId, cal.MealId)
-		co := CalendarOutput{Name: meal.Name, Date: cal.Date}
+		co := CalendarOutput{Name: cal.MealName, Date: cal.Date}
 		calendarOutput = append(calendarOutput, co)
 	}
 
@@ -109,8 +108,7 @@ func (a *CalendarAPI) RedoCalendarHandler(c echo.Context) error {
 	var calendarOutput []CalendarOutput
 
 	for _, cal := range calendar {
-		meal, _ := Microservices.GetMeal(cal.UserId, cal.MealId)
-		co := CalendarOutput{Name: meal.Name, Date: cal.Date}
+		co := CalendarOutput{Name: cal.MealName, Date: cal.Date}
 		calendarOutput = append(calendarOutput, co)
 	}
 	finalCal, err := a.Manager.GetFrontCalendar(calendar)

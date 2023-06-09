@@ -17,9 +17,10 @@ type CalendarUpdate struct {
 }
 
 type Calendar struct {
-	UserId string `db:"user_id" json:"user_id"`
-	MealId string `db:"meal_id" json:"meal_id"`
-	Date   string `db:"date" json:"date"`
+	UserId   string `db:"user_id" json:"user_id"`
+	MealId   string `db:"meal_id" json:"meal_id"`
+	MealName string `json:"meal_name"`
+	Date     string `db:"date" json:"date"`
 }
 
 type CalendarWithMeals struct {

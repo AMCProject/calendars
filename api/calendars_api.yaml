@@ -55,6 +55,13 @@ paths:
         - Calendars
       summary: Update user's Calendar
       operationId: PutCalendar
+      requestBody:
+        description: 'Body to update a Calendar'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalendarRequest'
+        required: true
       responses:
         200:
           description: OK
@@ -113,26 +120,35 @@ components:
       properties:
         name:
           type: string
-          example: amc
-        mail:
+          example: pizza
+        date:
           type: string
-          example: amc@amcgroup.com
-        password:
-          type: string
-          example: MyPassword.123
-    CalendarResponse:
+          example: 2023/06/09
+    CalendarBody:
       title: Calendar Response
       type: object
       properties:
-        id:
-          type: string
-          example: 01H00Q44V18CKXHMY7FEJ28 76S
         name:
           type: string
-          example: amc
-        mail:
+          example: pizza
+        date:
           type: string
-          example: amc@amcgroup.com
+          example: 2023/06/09
+    CalendarResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CalendarBody'
+      example:
+        - date: 2023/06/09
+          name: pizza
+        - date: 2023/06/10
+          name: salad
+        - date: 2023/06/11
+          name: rice with chicken
+        - date: 2023/06/13
+          name: spaghetti with pesto
+        - date: 2023/06/14
+          name: burritos
     ErrorResponse:
       title: Error Response
       type: object

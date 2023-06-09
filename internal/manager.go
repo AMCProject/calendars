@@ -67,7 +67,7 @@ func (c *CalendarManager) GetCalendar(id string) (calendar []Calendar, err error
 }
 
 func (c *CalendarManager) UpdateCalendar(id string, calendar CalendarUpdate) (calendarResponse []Calendar, err error) {
-	if _, err = Microservices.GetUser(id); err != nil {
+	if _, err = Microservices.GetMeal(id, calendar.MealId); err != nil {
 		return
 	}
 
@@ -85,9 +85,6 @@ func (c *CalendarManager) UpdateCalendar(id string, calendar CalendarUpdate) (ca
 func (c *CalendarManager) CreateCalendar(id string) (calendar []Calendar, err error) {
 	if _, err = c.db.GetCalendar(id); err == nil {
 		return []Calendar{}, ErrCalendarAlreadyExists
-	}
-	if _, err = Microservices.GetUser(id); err != nil {
-		return
 	}
 	meals, err := Microservices.GetAllMeals(id)
 	if err != nil {
@@ -121,12 +118,7 @@ func (c *CalendarManager) GetFrontCalendar(calendar []Calendar) (finalCal []Cale
 		finalCal = append(finalCal, calAux)
 	}
 	for _, cal := range calendar {
-		var meal MealToFront
-		meal, err = Microservices.GetMeal(cal.UserId, cal.MealId)
-		if err != nil {
-			return
-		}
-		calAux := CalendarWithMeals{MealId: cal.MealId, UserId: cal.UserId, Date: cal.Date, Name: meal.Name}
+		calAux := CalendarWithMeals{MealId: cal.MealId, UserId: cal.UserId, Date: cal.Date, Name: cal.MealName}
 		finalCal = append(finalCal, calAux)
 	}
 	return
