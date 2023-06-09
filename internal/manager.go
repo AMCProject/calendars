@@ -9,7 +9,7 @@ import (
 
 type ICalendarManager interface {
 	GetCalendar(id string) (calendar []Calendar, err error)
-	UpdateCalendar(id string, calendar []CalendarUpdate) (calendarResponse []Calendar, err error)
+	UpdateCalendar(id string, calendar CalendarUpdate) (calendarResponse []Calendar, err error)
 	CreateCalendar(id string) (calendar []Calendar, err error)
 	DeleteCalendar(id string) (err error)
 	GetFrontCalendar(calendar []Calendar) (finalCal []CalendarWithMeals, err error)
@@ -66,19 +66,17 @@ func (c *CalendarManager) GetCalendar(id string) (calendar []Calendar, err error
 	return
 }
 
-func (c *CalendarManager) UpdateCalendar(id string, calendar []CalendarUpdate) (calendarResponse []Calendar, err error) {
+func (c *CalendarManager) UpdateCalendar(id string, calendar CalendarUpdate) (calendarResponse []Calendar, err error) {
 	if _, err = Microservices.GetUser(id); err != nil {
 		return
 	}
-	for _, cal := range calendar {
-		if _, err = c.db.GetCalendarSpecificDate(id, cal.MealDate); err != nil {
-			return
-		}
+
+	if _, err = c.db.GetCalendarSpecificDate(id, calendar.MealDate); err != nil {
+		return
 	}
-	for _, cal := range calendar {
-		if err = c.db.UpdateCalendar(id, cal); err != nil {
-			return
-		}
+
+	if err = c.db.UpdateCalendar(id, calendar); err != nil {
+		return
 	}
 
 	return c.db.GetCalendar(id)

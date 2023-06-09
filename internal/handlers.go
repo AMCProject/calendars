@@ -62,12 +62,12 @@ func (a *CalendarAPI) PutCalendarHandler(c echo.Context) error {
 		return NewErrorResponse(c, err)
 	}
 
-	var calendarReq []CalendarUpdate
+	calendarReq := &CalendarUpdate{}
 	if err := c.Bind(calendarReq); err != nil {
 		return NewErrorResponse(c, ErrWrongBody)
 	}
 
-	calendar, err := a.Manager.UpdateCalendar(userID, calendarReq)
+	calendar, err := a.Manager.UpdateCalendar(userID, *calendarReq)
 	if err != nil {
 		return NewErrorResponse(c, err)
 	}

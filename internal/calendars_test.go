@@ -15,7 +15,7 @@ import (
 )
 
 var databaseTest = "/amc_test.db"
-var mealsDb = []Meal{
+var mealsDb = []*MealToFront{
 	{
 		Id:     "01FN3EEB2NVFJAHAPM00000001",
 		UserId: "01FN3EEB2NVFJAHAPU00000001",
@@ -119,7 +119,7 @@ func (s *CalendarAPITestSuite) SetupTest() {
 	_ = database.RemoveDB(databaseTest)
 	s.db = database.InitDB(databaseTest)
 
-	s.db.Conn.Exec(createCalendar, "01FN3EEB2NVFJAHAPM00000001", "01FN3EEB2NVFJAHAPU00000002", "2023/06/01")
+	s.db.Conn.Exec(createCalendar, "01FN3EEB2NVFJAHAPM00000001", "01FN3EEB2NVFJAHAPU00000002", time.Now().Format("2006-01-02"))
 }
 
 func (s *CalendarAPITestSuite) TearDownTest() {
@@ -285,9 +285,9 @@ func (s *CalendarAPITestSuite) TestPutCalendarHandler() {
 		{
 			name:   "Update calendar (ok)",
 			userID: "01FN3EEB2NVFJAHAPU00000002",
-			reqBody: &CalendarOutput{
-				Name: "pizza margarita",
-				Date: time.Now().Format("2006-01-02"),
+			reqBody: CalendarUpdate{
+				MealId:   "01FN3EEB2NVFJAHAPM00000010",
+				MealDate: time.Now().Format("2006-01-02"),
 			},
 			expectedStatusCode: http.StatusOK,
 			wantErr:            false,

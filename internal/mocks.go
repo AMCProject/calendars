@@ -13,9 +13,9 @@ func (e *EndpointsMock) GetUser(userId string) (user User, err error) {
 	return args.Get(0).(User), args.Error(1)
 }
 
-func (e *EndpointsMock) GetAllMeals(userId string) (meals []Meal, err error) {
+func (e *EndpointsMock) GetAllMeals(userId string) (meals []*MealToFront, err error) {
 	args := e.Called(userId)
-	return args.Get(0).([]Meal), args.Error(1)
+	return args.Get(0).([]*MealToFront), args.Error(1)
 }
 
 func (e *EndpointsMock) GetMeal(userId, mealId string) (meal MealToFront, err error) {
