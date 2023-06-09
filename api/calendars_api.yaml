@@ -126,7 +126,7 @@ components:
       properties:
         id:
           type: string
-          example: 01H00Q44V18CKXHMY7FEJ2876S
+          example: 01H00Q44V18CKXHMY7FEJ28 76S
         name:
           type: string
           example: amc

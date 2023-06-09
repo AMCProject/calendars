@@ -1,14 +1,12 @@
 package internal
 
 import (
+	"calendar/internal/config"
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/gommon/log"
 	"net/http"
 )
-
-const mealUrl = "http://localhost:3200/"
-const userUrl = "http://localhost:3100/"
 
 type Endpoints struct {
 }
@@ -21,7 +19,7 @@ type EndpointsI interface {
 var httpClient = &http.Client{}
 
 func (e *Endpoints) GetUser(userId string) (user User, err error) {
-	request, err := http.NewRequest(http.MethodGet, userUrl+"user/"+userId, nil)
+	request, err := http.NewRequest(http.MethodGet, config.Config.UsersURL+"user/"+userId, nil)
 	if err != nil {
 		log.Error(err)
 		return User{}, ErrReturningUser
@@ -46,7 +44,7 @@ func (e *Endpoints) GetUser(userId string) (user User, err error) {
 
 func (e *Endpoints) GetAllMeals(userId string) (meals []*MealToFront, err error) {
 
-	request, err := http.NewRequest(http.MethodGet, mealUrl+"user/"+userId+"/meal", nil)
+	request, err := http.NewRequest(http.MethodGet, config.Config.MealsURL+"user/"+userId+"/meal", nil)
 	if err != nil {
 		log.Error(err)
 		return []*MealToFront{}, ErrReturningAllMeals
@@ -65,7 +63,7 @@ func (e *Endpoints) GetAllMeals(userId string) (meals []*MealToFront, err error)
 }
 
 func (e *Endpoints) GetMeal(userId, mealId string) (meal MealToFront, err error) {
-	request, err := http.NewRequest(http.MethodGet, mealUrl+"user/"+userId+"/meal/"+mealId, nil)
+	request, err := http.NewRequest(http.MethodGet, config.Config.MealsURL+"user/"+userId+"/meal/"+mealId, nil)
 	if err != nil {
 		log.Error(err)
 		return MealToFront{}, ErrReturningMeal
