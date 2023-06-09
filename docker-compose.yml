@@ -1,0 +1,12 @@
+version: '3.7'
+
+services:
+  amc_calendar:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: amc_calendar
+    init: true
+    restart: unless-stopped
+    ports:
+      - "3300:3300"

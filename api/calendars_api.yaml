@@ -1,0 +1,199 @@
+openapi: 3.0.3
+info:
+  title: Calendars API
+  description: Calendars OpenAPI endpoints
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:3300
+    description: Local
+tags:
+  - name: Calendars
+    description: Operations about Calendars
+paths:
+
+  /user/{user_id}/calendar:
+    parameters:
+      - $ref: '#/components/parameters/userId'
+    post:
+      tags:
+        - Calendars
+      summary: Create user's Calendar
+      operationId: PostCalendar
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/ServerError'
+    get:
+      tags:
+        - Calendars
+      summary: Get user's Calendar
+      operationId: GetCalendar
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/ServerError'
+    put:
+      tags:
+        - Calendars
+      summary: Update user's Calendar
+      operationId: PutCalendar
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/ServerError'
+    delete:
+      tags:
+        - Calendars
+      summary: Delete Calendar
+      operationId: DeleteCalendar
+      responses:
+        204:
+          description: The user was deleted successfully.
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/ServerError'
+
+  /user/{user_id}/redo:
+    parameters:
+      - $ref: '#/components/parameters/userId'
+    put :
+      tags:
+        - Calendars
+      summary: Redo user's Calendar
+      operationId: RedoCalendar
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/ServerError'
+
+components:
+  schemas:
+    CalendarRequest:
+      title: Calendar Request
+      type: object
+      properties:
+        name:
+          type: string
+          example: amc
+        mail:
+          type: string
+          example: amc@amcgroup.com
+        password:
+          type: string
+          example: MyPassword.123
+    CalendarResponse:
+      title: Calendar Response
+      type: object
+      properties:
+        id:
+          type: string
+          example: 01H00Q44V18CKXHMY7FEJ2876S
+        name:
+          type: string
+          example: amc
+        mail:
+          type: string
+          example: amc@amcgroup.com
+    ErrorResponse:
+      title: Error Response
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            status:
+              type: integer
+              format: int64
+              example: 400
+            message:
+              type: string
+              example: invalid id
+
+  parameters:
+    userId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        example: 01H00Q44V18CKXHMY7FEJ2876S
+  responses:
+    BadRequest:
+      description: Payload format error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              status: 400
+              message: malformed body
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              status: 404
+              message: Not found
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              status: 409
+              message: Conflict
+    ServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              status: 500
+              message: Internal Server Error
