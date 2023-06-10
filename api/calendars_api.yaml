@@ -118,12 +118,12 @@ components:
       title: Calendar Request
       type: object
       properties:
-        name:
+        meal_id:
           type: string
-          example: pizza
+          example: 01H2GSKFZT6EKPJCMCZZAF5VV5
         date:
           type: string
-          example: 2023/06/09
+          example: 26/05/2023
     CalendarBody:
       title: Calendar Response
       type: object
@@ -133,21 +133,31 @@ components:
           example: pizza
         date:
           type: string
-          example: 2023/06/09
+          example: 26/05/2023
     CalendarResponse:
       type: array
       items:
         $ref: '#/components/schemas/CalendarBody'
       example:
-        - date: 2023/06/09
+        - user_id: 01H00Q44V18CKXHMY7FEJ2876S
+          meal_id: 01H2G2C5NP5JHRW46A137YPE8F
+          date: 09/06/2023
           name: pizza
-        - date: 2023/06/10
+        - user_id: 01H00Q44V18CKXHMY7FEJ2876S
+          meal_id: 01H2GF5GEZSA2ACGRRA5G5B1C2
+          date: 10/06/2023
           name: salad
-        - date: 2023/06/11
+        - user_id: 01H00Q44V18CKXHMY7FEJ2876S
+          meal_id: 01H2G2CRMZJM2SJASEAT3CZEGM
+          date: 11/06/2023
           name: rice with chicken
-        - date: 2023/06/13
+        - user_id: 01H00Q44V18CKXHMY7FEJ2876S
+          meal_id: 01H2GD5P7GW3REQ3XTHTJD6RPS
+          date: 12/06/2023
           name: spaghetti with pesto
-        - date: 2023/06/14
+        - user_id: 01H00Q44V18CKXHMY7FEJ2876S
+          meal_id: 01H2GSKFZT6EKPJCMCZZAF5VV5
+          date: 13/06/2023
           name: burritos
     ErrorResponse:
       title: Error Response

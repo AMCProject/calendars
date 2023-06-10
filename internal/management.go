@@ -41,7 +41,7 @@ func (s *CalendarTools) CalendarCreator(userId string, meals []*MealToFront) (ca
 			UserId: userId,
 			MealId: meal.Id,
 			Name:   meal.Name,
-			Date:   newDate.Format("2006-01-02"),
+			Date:   newDate.Format("02/01/2006"),
 		}
 		calendar = append(calendar, cal)
 	}
@@ -54,14 +54,14 @@ func (s *CalendarTools) UpdateNewDays(userId string, calendar []Calendar, meals 
 	if len(calendar) >= 28 {
 		finalCalendar = calendar[days:]
 	}
-	t, _ := time.Parse("2006-01-02", finalCalendar[len(finalCalendar)-1].Date)
+	t, _ := time.Parse("02/01/2006", finalCalendar[len(finalCalendar)-1].Date)
 	for i := 0; i < days; i++ {
 		newDate := t.AddDate(0, 0, i+1)
 		meal := s.ReturnRandomMeal(finalCalendar, meals, int(newDate.Weekday()))
 		cal := Calendar{
 			UserId: userId,
 			MealId: meal.Id,
-			Date:   newDate.Format("2006-01-02"),
+			Date:   newDate.Format("02/01/2006"),
 		}
 		finalCalendar = append(finalCalendar, cal)
 

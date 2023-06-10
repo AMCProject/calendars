@@ -2,7 +2,6 @@ package internal
 
 import (
 	"calendar/pkg/database"
-	"fmt"
 	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
@@ -43,13 +42,13 @@ func (c *CalendarManager) GetCalendar(id string) (calendar []Calendar, err error
 	if len(calendar) > 0 {
 		t := time.Now()
 		t = t.AddDate(0, 0, int(21+(7-t.Weekday())))
-		tFormat := t.Format("2006-01-02")
+		tFormat := t.Format("02/01/2006")
 		if !strings.EqualFold(tFormat, calendar[len(calendar)-1].Date) {
 			meals, errM := Microservices.GetAllMeals(id)
 			if errM != nil {
 				return calendar, errM
 			}
-			lastD, errF := time.Parse("2006-01-02", calendar[len(calendar)-1].Date)
+			lastD, errF := time.Parse("02/01/2006", calendar[len(calendar)-1].Date)
 			if errF != nil {
 				return calendar, errF
 			}
@@ -70,6 +69,10 @@ func (c *CalendarManager) GetCalendar(id string) (calendar []Calendar, err error
 func (c *CalendarManager) UpdateCalendar(id string, calendar Calendar) (calendarResponse []Calendar, err error) {
 	var meal MealToFront
 
+	_, err = time.Parse("02/01/2006", calendar.Date)
+	if err != nil {
+		return []Calendar{}, ErrInvalidDateFormat
+	}
 	if _, err = c.db.GetCalendarSpecificDate(id, calendar.Date); err != nil {
 		return
 	}
@@ -78,7 +81,7 @@ func (c *CalendarManager) UpdateCalendar(id string, calendar Calendar) (calendar
 		return
 	}
 	calendar.Name = meal.Name
-	fmt.Println("AQUi", calendar)
+
 	if err = c.db.UpdateCalendar(id, calendar); err != nil {
 		return
 	}

@@ -37,13 +37,14 @@ func NewErrorResponse(c echo.Context, err error) error {
 
 var errorsMap = map[string]ErrorBody{
 	ErrUserIDNotPresent.Error():      {Status: http.StatusBadRequest, Message: ErrUserIDNotPresent.Error()},
-	ErrSomethingWentWrong.Error():    {Status: http.StatusInternalServerError, Message: ErrSomethingWentWrong.Error()},
 	ErrWrongBody.Error():             {Status: http.StatusBadRequest, Message: ErrWrongBody.Error()},
+	ErrInvalidDateFormat.Error():     {Status: http.StatusBadRequest, Message: ErrInvalidDateFormat.Error()},
 	ErrCalendarNotFound.Error():      {Status: http.StatusNotFound, Message: ErrCalendarNotFound.Error()},
 	ErrUserNotFound.Error():          {Status: http.StatusNotFound, Message: ErrUserNotFound.Error()},
 	ErrMealNotFound.Error():          {Status: http.StatusNotFound, Message: ErrMealNotFound.Error()},
 	ErrDateNotFound.Error():          {Status: http.StatusNotFound, Message: ErrDateNotFound.Error()},
 	ErrCalendarAlreadyExists.Error(): {Status: http.StatusConflict, Message: ErrCalendarAlreadyExists.Error()},
+	ErrSomethingWentWrong.Error():    {Status: http.StatusInternalServerError, Message: ErrSomethingWentWrong.Error()},
 	ErrReturningAllMeals.Error():     {Status: http.StatusInternalServerError, Message: ErrReturningAllMeals.Error()},
 	ErrReturningMeal.Error():         {Status: http.StatusInternalServerError, Message: ErrReturningMeal.Error()},
 	ErrReturningUser.Error():         {Status: http.StatusInternalServerError, Message: ErrReturningUser.Error()},
@@ -60,4 +61,5 @@ var (
 	ErrReturningMeal         = errors.New("unexpect error recovering specific meal")
 	ErrReturningUser         = errors.New("unexpect error recovering user")
 	ErrDateNotFound          = errors.New("date not found in this calendar")
+	ErrInvalidDateFormat     = errors.New("invalid date format, must be yyyy/MM/dd")
 )
