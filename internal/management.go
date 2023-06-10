@@ -38,10 +38,10 @@ func (s *CalendarTools) CalendarCreator(userId string, meals []*MealToFront) (ca
 		newDate := t.AddDate(0, 0, i)
 		meal := s.ReturnRandomMeal(calendar, meals, int(newDate.Weekday()))
 		cal := Calendar{
-			UserId:   userId,
-			MealId:   meal.Id,
-			MealName: meal.Name,
-			Date:     newDate.Format("2006-01-02"),
+			UserId: userId,
+			MealId: meal.Id,
+			Name:   meal.Name,
+			Date:   newDate.Format("2006-01-02"),
 		}
 		calendar = append(calendar, cal)
 	}

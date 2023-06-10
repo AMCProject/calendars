@@ -6,28 +6,11 @@ const (
 	Ocasional = "occasional"
 )
 
-type CalendarOutput struct {
-	Date string `json:"date" validate:"required,excludes= "`
-	Name string `json:"name" validate:"required,excludes= "`
-}
-
-type CalendarUpdate struct {
-	MealId   string `db:"id" json:"id" validate:"required,excludes= "`
-	MealDate string `db:"date" json:"date" validate:"required"`
-}
-
 type Calendar struct {
-	UserId   string `db:"user_id" json:"user_id"`
-	MealId   string `db:"meal_id" json:"meal_id"`
-	MealName string `json:"meal_name"`
-	Date     string `db:"date" json:"date"`
-}
-
-type CalendarWithMeals struct {
 	UserId string `db:"user_id" json:"user_id"`
 	MealId string `db:"meal_id" json:"meal_id"`
+	Name   string `json:"name" json:"name"`
 	Date   string `db:"date" json:"date"`
-	Name   string `json:"name"`
 }
 
 //definitions for endpoint calls//

@@ -22,17 +22,15 @@ func (a *CalendarAPI) PostCalendarHandler(c echo.Context) error {
 	}); err != nil {
 		return NewErrorResponse(c, err)
 	}
-	var calendarOutput []CalendarOutput
 	calendar, err := a.Manager.CreateCalendar(userID)
 	if err != nil {
 		return NewErrorResponse(c, err)
 	}
-	for _, cal := range calendar {
-		co := CalendarOutput{Name: cal.MealName, Date: cal.Date}
-		calendarOutput = append(calendarOutput, co)
+	finalCal, err := a.Manager.GetFrontCalendar(calendar)
+	if err != nil {
+		return NewErrorResponse(c, err)
 	}
-
-	return c.JSON(http.StatusCreated, calendarOutput)
+	return c.JSON(http.StatusCreated, finalCal)
 }
 
 func (a *CalendarAPI) GetCalendarHandler(c echo.Context) error {
@@ -61,7 +59,7 @@ func (a *CalendarAPI) PutCalendarHandler(c echo.Context) error {
 		return NewErrorResponse(c, err)
 	}
 
-	calendarReq := &CalendarUpdate{}
+	calendarReq := &Calendar{}
 	if err := c.Bind(calendarReq); err != nil {
 		return NewErrorResponse(c, ErrWrongBody)
 	}
@@ -105,12 +103,7 @@ func (a *CalendarAPI) RedoCalendarHandler(c echo.Context) error {
 	if err != nil {
 		return NewErrorResponse(c, err)
 	}
-	var calendarOutput []CalendarOutput
 
-	for _, cal := range calendar {
-		co := CalendarOutput{Name: cal.MealName, Date: cal.Date}
-		calendarOutput = append(calendarOutput, co)
-	}
 	finalCal, err := a.Manager.GetFrontCalendar(calendar)
 	if err != nil {
 		return NewErrorResponse(c, err)

@@ -7,8 +7,8 @@ import (
 
 const (
 	getCalendar    = "SELECT * FROM calendar WHERE user_id = ? ORDER BY date"
-	updateCalendar = "UPDATE calendar SET meal_id = ? WHERE user_id = ? AND date = ?"
-	createCalendar = "INSERT INTO calendar (meal_id,user_id,date) VALUES (?,?,?)"
+	updateCalendar = "UPDATE calendar SET meal_id = ?, name = ? WHERE user_id = ? AND date = ?"
+	createCalendar = "INSERT INTO calendar (meal_id,user_id,date,name) VALUES (?,?,?,?)"
 	deleteCalendar = "DELETE FROM calendar WHERE user_id = ?"
 
 	specificDateCalendar = "SELECT * FROM calendar WHERE user_id = ? AND date = ?"
@@ -20,7 +20,7 @@ type SQLiteCalendarRepository struct {
 
 type DBCalendarI interface {
 	GetCalendar(id string) (calendar []Calendar, err error)
-	UpdateCalendar(id string, calendar CalendarUpdate) (err error)
+	UpdateCalendar(id string, calendar Calendar) (err error)
 	CreateCalendar(calendar []Calendar) (err error)
 	DeleteCalendar(id string) (err error)
 
@@ -45,8 +45,8 @@ func (r *SQLiteCalendarRepository) GetCalendar(id string) (calendar []Calendar, 
 	return
 }
 
-func (r *SQLiteCalendarRepository) UpdateCalendar(id string, c CalendarUpdate) (err error) {
-	_, err = r.db.Conn.Exec(updateCalendar, c.MealId, id, c.MealDate)
+func (r *SQLiteCalendarRepository) UpdateCalendar(id string, c Calendar) (err error) {
+	_, err = r.db.Conn.Exec(updateCalendar, c.MealId, c.Name, id, c.Date)
 	if err != nil {
 		log.Error(err)
 		return
@@ -56,7 +56,7 @@ func (r *SQLiteCalendarRepository) UpdateCalendar(id string, c CalendarUpdate) (
 
 func (r *SQLiteCalendarRepository) CreateCalendar(calendar []Calendar) (err error) {
 	for _, c := range calendar {
-		_, err = r.db.Conn.Exec(createCalendar, c.MealId, c.UserId, c.Date)
+		_, err = r.db.Conn.Exec(createCalendar, c.MealId, c.UserId, c.Date, c.Name)
 		if err != nil {
 			log.Error(err)
 			return

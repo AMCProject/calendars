@@ -2,6 +2,7 @@ package internal
 
 import (
 	"calendar/pkg/database"
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
@@ -9,10 +10,10 @@ import (
 
 type ICalendarManager interface {
 	GetCalendar(id string) (calendar []Calendar, err error)
-	UpdateCalendar(id string, calendar CalendarUpdate) (calendarResponse []Calendar, err error)
+	UpdateCalendar(id string, calendar Calendar) (calendarResponse []Calendar, err error)
 	CreateCalendar(id string) (calendar []Calendar, err error)
 	DeleteCalendar(id string) (err error)
-	GetFrontCalendar(calendar []Calendar) (finalCal []CalendarWithMeals, err error)
+	GetFrontCalendar(calendar []Calendar) (finalCal []Calendar, err error)
 }
 
 var Microservices EndpointsI = &Endpoints{}
@@ -66,15 +67,18 @@ func (c *CalendarManager) GetCalendar(id string) (calendar []Calendar, err error
 	return
 }
 
-func (c *CalendarManager) UpdateCalendar(id string, calendar CalendarUpdate) (calendarResponse []Calendar, err error) {
-	if _, err = Microservices.GetMeal(id, calendar.MealId); err != nil {
+func (c *CalendarManager) UpdateCalendar(id string, calendar Calendar) (calendarResponse []Calendar, err error) {
+	var meal MealToFront
+
+	if _, err = c.db.GetCalendarSpecificDate(id, calendar.Date); err != nil {
 		return
 	}
 
-	if _, err = c.db.GetCalendarSpecificDate(id, calendar.MealDate); err != nil {
+	if meal, err = Microservices.GetMeal(id, calendar.MealId); err != nil {
 		return
 	}
-
+	calendar.Name = meal.Name
+	fmt.Println("AQUi", calendar)
 	if err = c.db.UpdateCalendar(id, calendar); err != nil {
 		return
 	}
@@ -111,14 +115,14 @@ func (c *CalendarManager) DeleteCalendar(id string) (err error) {
 	return c.db.DeleteCalendar(id)
 }
 
-func (c *CalendarManager) GetFrontCalendar(calendar []Calendar) (finalCal []CalendarWithMeals, err error) {
+func (c *CalendarManager) GetFrontCalendar(calendar []Calendar) (finalCal []Calendar, err error) {
 	diff := 28 - len(calendar)
 	for i := 0; i < diff; i++ {
-		calAux := CalendarWithMeals{MealId: "", Name: "NO HAY COMIDA"}
+		calAux := Calendar{MealId: "", Name: "NO HAY COMIDA"}
 		finalCal = append(finalCal, calAux)
 	}
 	for _, cal := range calendar {
-		calAux := CalendarWithMeals{MealId: cal.MealId, UserId: cal.UserId, Date: cal.Date, Name: cal.MealName}
+		calAux := Calendar{MealId: cal.MealId, UserId: cal.UserId, Date: cal.Date, Name: cal.Name}
 		finalCal = append(finalCal, calAux)
 	}
 	return
