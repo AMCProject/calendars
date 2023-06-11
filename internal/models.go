@@ -38,7 +38,7 @@ type Meal struct {
 
 type MealToFront struct {
 	Id          string   `json:"id"`
-	UserId      string   `json:"userId"`
+	UserId      string   `json:"user_id"`
 	Name        string   `json:"name" validate:"required"`
 	Description string   `json:"description"`
 	Image       string   `json:"image"`
