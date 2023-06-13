@@ -119,7 +119,7 @@ func (s *CalendarAPITestSuite) SetupTest() {
 	_ = database.RemoveDB(databaseTest)
 	s.db = database.InitDB(databaseTest)
 
-	s.db.Conn.Exec(createCalendar, "01FN3EEB2NVFJAHAPM00000001", "01FN3EEB2NVFJAHAPU00000002", time.Now().Format("02/01/2006"), "pizza")
+	s.db.Conn.Exec(createCalendar, "01FN3EEB2NVFJAHAPM00000001", "01FN3EEB2NVFJAHAPU00000002", time.Now().Format("2006/01/02"), "pizza")
 }
 
 func (s *CalendarAPITestSuite) TearDownTest() {
@@ -287,7 +287,7 @@ func (s *CalendarAPITestSuite) TestPutCalendarHandler() {
 			userID: "01FN3EEB2NVFJAHAPU00000002",
 			reqBody: Calendar{
 				MealId: "01FN3EEB2NVFJAHAPM00000010",
-				Date:   time.Now().Format("02/01/2006"),
+				Date:   time.Now().Format("2006/01/02"),
 			},
 			expectedStatusCode: http.StatusOK,
 			wantErr:            false,

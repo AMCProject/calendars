@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	RouteCalendar     = "/user/:user_id/calendar"
-	RouteCalendarRedo = "/user/:user_id/redo"
+	RouteCalendar         = "/user/:user_id/calendar"
+	RouteCalendarRedo     = "/user/:user_id/redo"
+	RouteCalendarRedoWeek = "/user/:user_id/redoweek"
 
 	ParamUserID = "user_id"
 )
@@ -29,6 +30,12 @@ type ErrorBody struct {
 
 func NewErrorResponse(c echo.Context, err error) error {
 	errResponse := &ErrorResponse{Err: errorsMap[err.Error()]}
+	if errResponse.Err.Status == 0 {
+		if err := c.JSON(http.StatusInternalServerError, err); err != nil {
+			return err
+		}
+		return err
+	}
 	if err := c.JSON(errResponse.Err.Status, errResponse); err != nil {
 		return err
 	}
@@ -61,5 +68,5 @@ var (
 	ErrReturningMeal         = errors.New("unexpect error recovering specific meal")
 	ErrReturningUser         = errors.New("unexpect error recovering user")
 	ErrDateNotFound          = errors.New("date not found in this calendar")
-	ErrInvalidDateFormat     = errors.New("invalid date format, must be yyyy/MM/dd")
+	ErrInvalidDateFormat     = errors.New("invalid date format, must be dd/MM/yyyy")
 )

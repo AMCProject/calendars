@@ -13,6 +13,11 @@ type Calendar struct {
 	Date   string `db:"date" json:"date"`
 }
 
+type UpdateWeekCalendar struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
 //definitions for endpoint calls//
 
 type User struct {

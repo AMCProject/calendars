@@ -60,4 +60,5 @@ func addRoutes(e *echo.Echo, db database.Database) {
 	e.DELETE(internal.RouteCalendar, calendarAPI.DeleteCalendarHandler)
 
 	e.PUT(internal.RouteCalendarRedo, calendarAPI.RedoCalendarHandler)
+	e.PUT(internal.RouteCalendarRedoWeek, calendarAPI.RedoWeekCalendarHandler)
 }

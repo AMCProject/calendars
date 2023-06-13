@@ -10,6 +10,7 @@ import (
 type ICalendarManager interface {
 	GetCalendar(id string) (calendar []Calendar, err error)
 	UpdateCalendar(id string, calendar Calendar) (calendarResponse []Calendar, err error)
+	UpdateDaysCalendar(id string, dates UpdateWeekCalendar) (calendar []Calendar, err error)
 	CreateCalendar(id string) (calendar []Calendar, err error)
 	DeleteCalendar(id string) (err error)
 	GetFrontCalendar(calendar []Calendar) (finalCal []Calendar, err error)
@@ -32,44 +33,53 @@ func NewCalendarManager(db database.Database) *CalendarManager {
 }
 
 func (c *CalendarManager) GetCalendar(id string) (calendar []Calendar, err error) {
-	if _, err = Microservices.GetUser(id); err != nil {
-		return
-	}
 	calendar, err = c.db.GetCalendar(id)
 	if err != nil {
 		return
 	}
-	if len(calendar) > 0 {
-		t := time.Now()
-		t = t.AddDate(0, 0, int(21+(7-t.Weekday())))
-		tFormat := t.Format("02/01/2006")
-		if !strings.EqualFold(tFormat, calendar[len(calendar)-1].Date) {
-			meals, errM := Microservices.GetAllMeals(id)
-			if errM != nil {
-				return calendar, errM
-			}
-			lastD, errF := time.Parse("02/01/2006", calendar[len(calendar)-1].Date)
-			if errF != nil {
-				return calendar, errF
-			}
 
-			days := int(t.Sub(lastD).Hours() / 24)
-			if days > 28 {
-				calendar, err = c.utils.CalendarCreator(id, meals)
-			}
-			//_ = s.Repository.DeleteCalendar(id)
-			calendar, err = c.utils.UpdateNewDays(id, calendar, meals, days)
-		}
-		_ = c.db.DeleteCalendar(id)
-		_ = c.db.CreateCalendar(calendar)
+	t := time.Now()
+	wd := t.Weekday()
+	var differenceDays int
+	if wd == 0 {
+		differenceDays = 21
+	} else {
+		differenceDays = 21 + (7 - int(wd))
 	}
+	t = t.AddDate(0, 0, differenceDays)
+	tFormat := t.Format("2006/01/02")
+	if !strings.EqualFold(tFormat, calendar[len(calendar)-1].Date) {
+		meals, errM := Microservices.GetAllMeals(id)
+		if errM != nil {
+			return calendar, errM
+		}
+		lastD, errF := time.Parse("2006/01/02", calendar[len(calendar)-1].Date)
+		if errF != nil {
+			return calendar, errF
+		}
+		days := int(t.Sub(lastD).Hours() / 24)
+		if days > 28 {
+			calendar, err = c.utils.CalendarCreator(id, meals)
+		}
+		//_ = s.Repository.DeleteCalendar(id)
+		calendar, err = c.utils.UpdateNewDays(id, calendar, meals, days)
+		if len(calendar) > 28 {
+			calendar = calendar[len(calendar)+28:]
+		}
+		if err = c.db.DeleteCalendar(id); err != nil {
+			return []Calendar{}, ErrSomethingWentWrong
+		}
+		if err = c.db.CreateCalendar(calendar); err != nil {
+			return []Calendar{}, ErrSomethingWentWrong
+		}
+	}
+
 	return
 }
 
 func (c *CalendarManager) UpdateCalendar(id string, calendar Calendar) (calendarResponse []Calendar, err error) {
 	var meal MealToFront
-
-	_, err = time.Parse("02/01/2006", calendar.Date)
+	_, err = time.Parse("2006/01/02", calendar.Date)
 	if err != nil {
 		return []Calendar{}, ErrInvalidDateFormat
 	}
@@ -87,6 +97,42 @@ func (c *CalendarManager) UpdateCalendar(id string, calendar Calendar) (calendar
 	}
 
 	return c.db.GetCalendar(id)
+}
+
+func (c *CalendarManager) UpdateDaysCalendar(id string, dates UpdateWeekCalendar) (calendar []Calendar, err error) {
+	calendar, err = c.db.GetCalendar(id)
+	if err != nil {
+		return []Calendar{}, err
+	}
+	_, err = time.Parse("2006/01/02", dates.From)
+	if err != nil {
+		return []Calendar{}, ErrInvalidDateFormat
+	}
+	_, err = time.Parse("2006/01/02", dates.To)
+	if err != nil {
+		return []Calendar{}, ErrInvalidDateFormat
+	}
+	if _, err = c.db.GetCalendarSpecificDate(id, dates.From); err != nil {
+		return nil, err
+	}
+	if _, err = c.db.GetCalendarSpecificDate(id, dates.To); err != nil {
+		return nil, err
+	}
+	meals, err := Microservices.GetAllMeals(id)
+	if err != nil {
+		return
+	}
+	finalCal, err := c.utils.UpdateDaysInCalendar(id, calendar, meals, dates)
+	if err != nil {
+		return []Calendar{}, err
+	}
+	if err = c.db.DeleteCalendar(id); err != nil {
+		return []Calendar{}, ErrSomethingWentWrong
+	}
+	if err = c.db.CreateCalendar(finalCal); err != nil {
+		return []Calendar{}, ErrSomethingWentWrong
+	}
+	return finalCal, err
 }
 
 func (c *CalendarManager) CreateCalendar(id string) (calendar []Calendar, err error) {
@@ -120,8 +166,10 @@ func (c *CalendarManager) DeleteCalendar(id string) (err error) {
 
 func (c *CalendarManager) GetFrontCalendar(calendar []Calendar) (finalCal []Calendar, err error) {
 	diff := 28 - len(calendar)
+	firstDate, _ := time.Parse("2006/01/02", calendar[0].Date)
 	for i := 0; i < diff; i++ {
-		calAux := Calendar{MealId: "", Name: "NO HAY COMIDA"}
+		noMealDate := firstDate.AddDate(0, 0, -(diff - i))
+		calAux := Calendar{MealId: "", Name: "NO MEAL", Date: noMealDate.Format("2006/01/02")}
 		finalCal = append(finalCal, calAux)
 	}
 	for _, cal := range calendar {

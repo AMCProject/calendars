@@ -111,3 +111,28 @@ func (a *CalendarAPI) RedoCalendarHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, finalCal)
 
 }
+
+func (a *CalendarAPI) RedoWeekCalendarHandler(c echo.Context) error {
+	var userID string
+	if err := url.ParseURLPath(c, url.PathMap{
+		ParamUserID: {Target: &userID, Err: ErrUserIDNotPresent},
+	}); err != nil {
+		return NewErrorResponse(c, err)
+	}
+	dates := &UpdateWeekCalendar{}
+	if err := c.Bind(dates); err != nil {
+		return NewErrorResponse(c, ErrWrongBody)
+	}
+
+	calendar, err := a.Manager.UpdateDaysCalendar(userID, *dates)
+	if err != nil {
+		return NewErrorResponse(c, err)
+	}
+
+	finalCal, err := a.Manager.GetFrontCalendar(calendar)
+	if err != nil {
+		return NewErrorResponse(c, err)
+	}
+
+	return c.JSON(http.StatusOK, finalCal)
+}

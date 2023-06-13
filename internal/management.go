@@ -11,6 +11,7 @@ type CalendarTools struct{}
 
 type ICalendarTools interface {
 	CalendarCreator(userId string, meals []*MealToFront) (calendar []Calendar, err error)
+	UpdateDaysInCalendar(d string, calendar []Calendar, meals []*MealToFront, dates UpdateWeekCalendar) (finalCalendar []Calendar, err error)
 	UpdateNewDays(userId string, calendar []Calendar, meals []*MealToFront, days int) (finalCalendar []Calendar, err error)
 	ReturnRandomMeal(calendar []Calendar, meals []*MealToFront, wd int) (meal MealToFront)
 	CalendarContains(calendar []Calendar, mealId string) (distance float64)
@@ -25,12 +26,9 @@ func NewCalendarToolsManager() *CalendarTools {
 func (s *CalendarTools) CalendarCreator(userId string, meals []*MealToFront) (calendar []Calendar, err error) {
 	var days int
 	t := time.Now()
-	if t.Hour() >= 14 {
-		t = t.AddDate(0, 0, 1)
-	}
 	wd := t.Weekday()
 	if wd == 0 {
-		days = 28
+		days = 21
 	} else {
 		days = 21 + (7 - int(wd))
 	}
@@ -41,11 +39,36 @@ func (s *CalendarTools) CalendarCreator(userId string, meals []*MealToFront) (ca
 			UserId: userId,
 			MealId: meal.Id,
 			Name:   meal.Name,
-			Date:   newDate.Format("02/01/2006"),
+			Date:   newDate.Format("2006/01/02"),
 		}
 		calendar = append(calendar, cal)
 	}
 
+	return
+}
+
+func (s *CalendarTools) UpdateDaysInCalendar(id string, calendar []Calendar, meals []*MealToFront, dates UpdateWeekCalendar) (finalCalendar []Calendar, err error) {
+	var inRange bool
+	finalCalendar = calendar
+	for i, c := range finalCalendar {
+		if c.Date == dates.From {
+			inRange = true
+		}
+		if !inRange {
+			continue
+		}
+		weekDay, _ := time.Parse("2006/01/02", c.Date)
+		meal := s.ReturnRandomMeal(calendar, meals, int(weekDay.Weekday()))
+		finalCalendar[i] = Calendar{
+			UserId: id,
+			MealId: meal.Id,
+			Name:   meal.Name,
+			Date:   c.Date,
+		}
+		if c.Date == dates.To {
+			inRange = false
+		}
+	}
 	return
 }
 
@@ -54,14 +77,15 @@ func (s *CalendarTools) UpdateNewDays(userId string, calendar []Calendar, meals 
 	if len(calendar) >= 28 {
 		finalCalendar = calendar[days:]
 	}
-	t, _ := time.Parse("02/01/2006", finalCalendar[len(finalCalendar)-1].Date)
+	t, _ := time.Parse("2006/01/02", finalCalendar[len(finalCalendar)-1].Date)
 	for i := 0; i < days; i++ {
 		newDate := t.AddDate(0, 0, i+1)
 		meal := s.ReturnRandomMeal(finalCalendar, meals, int(newDate.Weekday()))
 		cal := Calendar{
 			UserId: userId,
 			MealId: meal.Id,
-			Date:   newDate.Format("02/01/2006"),
+			Name:   meal.Name,
+			Date:   newDate.Format("2006/01/02"),
 		}
 		finalCalendar = append(finalCalendar, cal)
 
@@ -74,6 +98,9 @@ func (s *CalendarTools) ReturnRandomMeal(calendar []Calendar, meals []*MealToFro
 	for _, m := range meals {
 		numb := math.Abs(rand.Float64() * 3)
 		distance := s.CalendarContains(calendar, m.Id)
+		if distance == 1 {
+			numb = -15.0
+		}
 		if distance > 0 {
 			numb = numb - 1.9 + ((distance / float64(len(calendar))) / 4)
 		}

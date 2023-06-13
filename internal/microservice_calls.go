@@ -3,7 +3,6 @@ package internal
 import (
 	"calendar/internal/config"
 	"encoding/json"
-	"fmt"
 	"github.com/labstack/gommon/log"
 	"net/http"
 )
@@ -30,8 +29,9 @@ func (e *Endpoints) GetUser(userId string) (user User, err error) {
 		return User{}, ErrReturningUser
 	}
 	if response.StatusCode > 299 {
-		log.Error(fmt.Sprintf("Error %d: %s", response.StatusCode, response.Status))
-		return User{}, ErrReturningUser
+		newError := new(ErrorResponse)
+		err = json.NewDecoder(response.Body).Decode(&newError)
+		return User{}, newError
 	}
 	err = json.NewDecoder(response.Body).Decode(&user)
 	if err != nil {
@@ -51,8 +51,9 @@ func (e *Endpoints) GetAllMeals(userId string) (meals []*MealToFront, err error)
 	}
 	response, err := httpClient.Do(request)
 	if response.StatusCode > 299 {
-		log.Error(fmt.Sprintf("Error %d: %s", response.StatusCode, response.Status))
-		return []*MealToFront{}, ErrReturningAllMeals
+		newError := new(ErrorResponse)
+		err = json.NewDecoder(response.Body).Decode(&newError)
+		return []*MealToFront{}, newError
 	}
 	err = json.NewDecoder(response.Body).Decode(&meals)
 	if err != nil {
@@ -70,9 +71,9 @@ func (e *Endpoints) GetMeal(userId, mealId string) (meal MealToFront, err error)
 	}
 	response, err := httpClient.Do(request)
 	if response.StatusCode > 299 {
-		log.Error(fmt.Sprintf("Error %d: %s", response.StatusCode, response.Status))
-		return MealToFront{}, ErrReturningMeal
-
+		newError := new(ErrorResponse)
+		err = json.NewDecoder(response.Body).Decode(&newError)
+		return MealToFront{}, newError
 	}
 	err = json.NewDecoder(response.Body).Decode(&meal)
 	if err != nil {
