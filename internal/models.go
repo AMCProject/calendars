@@ -1,9 +1,9 @@
 package internal
 
 const (
-	Normal    = "standard"
-	Semanal   = "weekly"
-	Ocasional = "occasional"
+	Normal    = "normal"
+	Semanal   = "semanal"
+	Ocasional = "ocasional"
 )
 
 type Calendar struct {
@@ -33,7 +33,7 @@ type Meal struct {
 	Name        string `db:"name" json:"name" validate:"required"`
 	Description string `db:"description" json:"description,omitempty"`
 	Image       string `db:"image" json:"image,omitempty"`
-	Type        string `db:"type" json:"type" validate:"required,oneof=weekly occasional standard"`
+	Type        string `db:"type" json:"type" validate:"required,oneof=semanal ocasional normal"`
 	Ingredients string `db:"ingredients" json:"ingredients" validate:"required"`
 	Kcal        int    `db:"kcal" json:"kcal"`
 	Seasons     string `db:"seasons" json:"seasons"`
@@ -47,10 +47,10 @@ type MealToFront struct {
 	Name        string   `json:"name" validate:"required"`
 	Description string   `json:"description"`
 	Image       string   `json:"image"`
-	Type        string   `json:"type" validate:"required,oneof=weekly occasional standard"`
+	Type        string   `json:"type" validate:"required,oneof=semanal ocasional normal"`
 	Ingredients []string `json:"ingredients" validate:"required"`
 	Kcal        int      `json:"kcal"`
-	Seasons     []string `json:"seasons" validate:"required,dive,oneof=summer winter spring fall general"`
+	Seasons     []string `json:"seasons" validate:"required,dive,oneof=verano invierno primavera otoño general"`
 	//Creator     int      `json:"creator"`
 	//Saves       int      `json:"saves"`
 }

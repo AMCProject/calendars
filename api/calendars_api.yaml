@@ -9,6 +9,8 @@ servers:
 tags:
   - name: Calendars
     description: Operations about Calendars
+  - name: RedoCalendar
+    description: Operation to Redo the Calendar
 paths:
 
   /user/{user_id}/calendar:
@@ -95,9 +97,38 @@ paths:
       - $ref: '#/components/parameters/userId'
     put :
       tags:
-        - Calendars
+        - RedoCalendar
       summary: Redo user's Calendar
       operationId: RedoCalendar
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/ServerError'
+
+  /user/{user_id}/redoweek:
+    parameters:
+      - $ref: '#/components/parameters/userId'
+    put:
+      tags:
+        - RedoCalendar
+      summary: Redo user's Calendar days selected
+      operationId: RedoCalendar
+      requestBody:
+        description: 'Body to update days of the Calendar randomly'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDaysCalendar'
+        required: true
       responses:
         200:
           description: OK
@@ -159,6 +190,16 @@ components:
           meal_id: 01H2GSKFZT6EKPJCMCZZAF5VV5
           date: 13/06/2023
           name: burritos
+    UpdateDaysCalendar:
+      title: Update Days Calendar
+      type: object
+      properties:
+        from:
+          type: string
+          example: 19/05/2023
+        to:
+          type: string
+          example: 26/05/2023
     ErrorResponse:
       title: Error Response
       type: object

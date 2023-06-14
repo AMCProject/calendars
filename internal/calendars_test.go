@@ -26,7 +26,7 @@ var mealsDb = []*MealToFront{
 		Id:     "01FN3EEB2NVFJAHAPM00000002",
 		UserId: "01FN3EEB2NVFJAHAPU00000001",
 		Name:   "meal2",
-		Type:   "weekly",
+		Type:   "semanal",
 	},
 	{
 		Id:     "01FN3EEB2NVFJAHAPM00000003",
@@ -50,7 +50,7 @@ var mealsDb = []*MealToFront{
 		Id:     "01FN3EEB2NVFJAHAPM00000006",
 		UserId: "01FN3EEB2NVFJAHAPU00000001",
 		Name:   "meal6",
-		Type:   "weekly",
+		Type:   "semanal",
 	},
 	{
 		Id:     "01FN3EEB2NVFJAHAPM00000007",
