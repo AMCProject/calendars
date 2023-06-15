@@ -11,37 +11,11 @@ import (
 type Endpoints struct {
 }
 type EndpointsI interface {
-	GetUser(userId string) (user User, err error)
 	GetAllMeals(userId string) (meals []*MealToFront, err error)
 	GetMeal(userId, mealId string) (meal MealToFront, err error)
 }
 
 var httpClient = &http.Client{}
-
-func (e *Endpoints) GetUser(userId string) (user User, err error) {
-	request, err := http.NewRequest(http.MethodGet, config.Config.UsersURL+"user/"+userId, nil)
-	if err != nil {
-		log.Error(err)
-		return User{}, ErrReturningUser
-	}
-	response, err := httpClient.Do(request)
-	if err != nil {
-		log.Error(err)
-		return User{}, ErrReturningUser
-	}
-	if response.StatusCode > 299 {
-		newError := new(ErrorResponse)
-		err = json.NewDecoder(response.Body).Decode(&newError)
-		return User{}, newError
-	}
-	err = json.NewDecoder(response.Body).Decode(&user)
-	if err != nil {
-		log.Error(err)
-		return User{}, ErrReturningUser
-	}
-
-	return
-}
 
 func (e *Endpoints) GetAllMeals(userId string) (meals []*MealToFront, err error) {
 	url := config.Config.MealsURL + "user/" + userId + "/meal"

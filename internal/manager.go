@@ -155,9 +155,6 @@ func (c *CalendarManager) CreateCalendar(id string) (calendar []Calendar, err er
 }
 
 func (c *CalendarManager) DeleteCalendar(id string) (err error) {
-	if _, err = Microservices.GetUser(id); err != nil {
-		return
-	}
 	if _, err = c.db.GetCalendar(id); err != nil {
 		return
 	}

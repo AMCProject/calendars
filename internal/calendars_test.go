@@ -171,7 +171,6 @@ func (s *CalendarAPITestSuite) TestPostCalendarHandler() {
 			calendarManager := NewCalendarManager(*s.db)
 			api := CalendarAPI{DB: *s.db, Manager: calendarManager}
 
-			s.httpMock.On("GetUser", t.userId).Return(User{}, nil).Once()
 			s.httpMock.On("GetAllMeals", t.userId).Return(mealsDb, nil).Once()
 			for i, meal := range mealsDb {
 				s.httpMock.On("GetMeal", t.userId, meal.Id).Return(MealToFront{Name: fmt.Sprintf("meal%d", i)}, nil)
@@ -248,7 +247,6 @@ func (s *CalendarAPITestSuite) TestGetCalendarHandler() {
 			calendarManager := NewCalendarManager(*s.db)
 			api := CalendarAPI{DB: *s.db, Manager: calendarManager}
 
-			s.httpMock.On("GetUser", t.userID).Return(User{}, nil).Once()
 			s.httpMock.On("GetAllMeals", t.userID).Return(mealsDb, nil).Once()
 			for i, meal := range mealsDb {
 				s.httpMock.On("GetMeal", t.userID, meal.Id).Return(MealToFront{Name: fmt.Sprintf("meal%d", i)}, nil)
@@ -322,7 +320,6 @@ func (s *CalendarAPITestSuite) TestPutCalendarHandler() {
 			calendarManager := NewCalendarManager(*s.db)
 			api := CalendarAPI{DB: *s.db, Manager: calendarManager}
 
-			s.httpMock.On("GetUser", t.userID).Return(User{}, nil).Once()
 			s.httpMock.On("GetAllMeals", t.userID).Return(mealsDb, nil).Once()
 			for i, meal := range mealsDb {
 				s.httpMock.On("GetMeal", t.userID, meal.Id).Return(MealToFront{Name: fmt.Sprintf("meal%d", i)}, nil)
@@ -399,7 +396,6 @@ func (s *CalendarAPITestSuite) TestDeleteCalendarHandler() {
 		s.Run(t.name, func() {
 			calendarManager := NewCalendarManager(*s.db)
 			api := CalendarAPI{DB: *s.db, Manager: calendarManager}
-			s.httpMock.On("GetUser", t.userID).Return(User{}, nil).Once()
 			s.httpMock.On("GetAllMeals", t.userID).Return(mealsDb, nil).Once()
 			for i, meal := range mealsDb {
 				s.httpMock.On("GetMeal", t.userID, meal.Id).Return(MealToFront{Name: fmt.Sprintf("meal%d", i)}, nil)
