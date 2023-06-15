@@ -68,7 +68,11 @@ func (a *CalendarAPI) PutCalendarHandler(c echo.Context) error {
 	if err != nil {
 		return NewErrorResponse(c, err)
 	}
-	return c.JSON(http.StatusOK, calendar)
+	finalCal, err := a.Manager.GetFrontCalendar(calendar)
+	if err != nil {
+		return NewErrorResponse(c, err)
+	}
+	return c.JSON(http.StatusOK, finalCal)
 }
 
 func (a *CalendarAPI) DeleteCalendarHandler(c echo.Context) error {
