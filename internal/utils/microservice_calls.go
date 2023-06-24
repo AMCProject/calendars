@@ -1,7 +1,9 @@
-package internal
+package utils
 
 import (
+	"calendar/internal"
 	"calendar/internal/config"
+	"calendar/internal/models"
 	"encoding/json"
 	"github.com/labstack/gommon/log"
 	"net/http"
@@ -11,13 +13,13 @@ import (
 type Endpoints struct {
 }
 type EndpointsI interface {
-	GetAllMeals(userId string) (meals []*MealToFront, err error)
-	GetMeal(userId, mealId string) (meal MealToFront, err error)
+	GetAllMeals(userId string) (meals []*models.MealToFront, err error)
+	GetMeal(userId, mealId string) (meal models.MealToFront, err error)
 }
 
 var httpClient = &http.Client{}
 
-func (e *Endpoints) GetAllMeals(userId string) (meals []*MealToFront, err error) {
+func (e *Endpoints) GetAllMeals(userId string) (meals []*models.MealToFront, err error) {
 	url := config.Config.MealsURL + "user/" + userId + "/meal"
 	season := getSeason()
 	if season != "" {
@@ -26,38 +28,38 @@ func (e *Endpoints) GetAllMeals(userId string) (meals []*MealToFront, err error)
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		log.Error(err)
-		return []*MealToFront{}, ErrReturningAllMeals
+		return []*models.MealToFront{}, internal.ErrReturningAllMeals
 	}
 	response, err := httpClient.Do(request)
 	if response.StatusCode > 299 {
-		newError := new(ErrorResponse)
+		newError := new(internal.ErrorResponse)
 		err = json.NewDecoder(response.Body).Decode(&newError)
-		return []*MealToFront{}, newError
+		return []*models.MealToFront{}, newError
 	}
 	err = json.NewDecoder(response.Body).Decode(&meals)
 	if err != nil {
 		log.Error(err)
-		return []*MealToFront{}, ErrReturningAllMeals
+		return []*models.MealToFront{}, internal.ErrReturningAllMeals
 	}
 	return
 }
 
-func (e *Endpoints) GetMeal(userId, mealId string) (meal MealToFront, err error) {
+func (e *Endpoints) GetMeal(userId, mealId string) (meal models.MealToFront, err error) {
 	request, err := http.NewRequest(http.MethodGet, config.Config.MealsURL+"user/"+userId+"/meal/"+mealId, nil)
 	if err != nil {
 		log.Error(err)
-		return MealToFront{}, ErrReturningMeal
+		return models.MealToFront{}, internal.ErrReturningMeal
 	}
 	response, err := httpClient.Do(request)
 	if response.StatusCode > 299 {
-		newError := new(ErrorResponse)
+		newError := new(internal.ErrorResponse)
 		err = json.NewDecoder(response.Body).Decode(&newError)
-		return MealToFront{}, newError
+		return models.MealToFront{}, newError
 	}
 	err = json.NewDecoder(response.Body).Decode(&meal)
 	if err != nil {
 		log.Error(err)
-		return MealToFront{}, ErrReturningMeal
+		return models.MealToFront{}, internal.ErrReturningMeal
 	}
 
 	return

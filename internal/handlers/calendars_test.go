@@ -1,7 +1,10 @@
-package internal
+package handlers
 
 import (
 	"bytes"
+	"calendar/internal"
+	"calendar/internal/managers"
+	"calendar/internal/models"
 	"calendar/pkg/database"
 	"fmt"
 	"github.com/json-iterator/go"
@@ -15,7 +18,7 @@ import (
 )
 
 var databaseTest = "/amc_test.db"
-var mealsDb = []*MealToFront{
+var mealsDb = []*models.MealToFront{
 	{
 		Id:     "01FN3EEB2NVFJAHAPM00000001",
 		UserId: "01FN3EEB2NVFJAHAPU00000001",
@@ -105,7 +108,7 @@ var mealsDb = []*MealToFront{
 type CalendarAPITestSuite struct {
 	suite.Suite
 	db       *database.Database
-	httpMock *EndpointsMock
+	httpMock *internal.EndpointsMock
 }
 
 func TestCalendarAPITestSuite(t *testing.T) {
@@ -114,12 +117,12 @@ func TestCalendarAPITestSuite(t *testing.T) {
 }
 
 func (s *CalendarAPITestSuite) SetupTest() {
-	s.httpMock = &EndpointsMock{}
-	Microservices = s.httpMock
+	s.httpMock = &internal.EndpointsMock{}
+	managers.Microservices = s.httpMock
 	_ = database.RemoveDB(databaseTest)
 	s.db = database.InitDB(databaseTest)
 
-	s.db.Conn.Exec(createCalendar, "01FN3EEB2NVFJAHAPM00000001", "01FN3EEB2NVFJAHAPU00000002", time.Now().Format("2006/01/02"), "pizza")
+	s.db.Conn.Exec("INSERT INTO calendar (meal_id,user_id,date,name) VALUES (?,?,?,?)", "01FN3EEB2NVFJAHAPM00000001", "01FN3EEB2NVFJAHAPU00000002", time.Now().Format("2006/01/02"), "pizza")
 }
 
 func (s *CalendarAPITestSuite) TearDownTest() {
@@ -144,10 +147,10 @@ func (s *CalendarAPITestSuite) TestPostCalendarHandler() {
 		},
 		{
 			name: "User id not present (400)",
-			expectedResp: &ErrorResponse{
-				Err: ErrorBody{
+			expectedResp: &internal.ErrorResponse{
+				Err: internal.ErrorBody{
 					Status:  http.StatusBadRequest,
-					Message: ErrUserIDNotPresent.Error(),
+					Message: internal.ErrUserIDNotPresent.Error(),
 				},
 			},
 			expectedStatusCode: http.StatusBadRequest,
@@ -156,11 +159,11 @@ func (s *CalendarAPITestSuite) TestPostCalendarHandler() {
 	}
 	getEchoContext := func(userId string) echo.Context {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPost, RouteCalendar, nil)
+		req := httptest.NewRequest(http.MethodPost, internal.RouteCalendar, nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		c.SetParamNames(ParamUserID)
+		c.SetParamNames(internal.ParamUserID)
 		c.SetParamValues(userId)
 		return c
 	}
@@ -168,12 +171,12 @@ func (s *CalendarAPITestSuite) TestPostCalendarHandler() {
 	for _, t := range tests {
 		s.Run(t.name, func() {
 
-			calendarManager := NewCalendarManager(*s.db)
+			calendarManager := managers.NewCalendarManager(*s.db)
 			api := CalendarAPI{DB: *s.db, Manager: calendarManager}
 
 			s.httpMock.On("GetAllMeals", t.userId).Return(mealsDb, nil).Once()
 			for i, meal := range mealsDb {
-				s.httpMock.On("GetMeal", t.userId, meal.Id).Return(MealToFront{Name: fmt.Sprintf("meal%d", i)}, nil)
+				s.httpMock.On("GetMeal", t.userId, meal.Id).Return(models.MealToFront{Name: fmt.Sprintf("meal%d", i)}, nil)
 			}
 			c := getEchoContext(t.userId)
 			err := api.PostCalendarHandler(c)
@@ -184,7 +187,7 @@ func (s *CalendarAPITestSuite) TestPostCalendarHandler() {
 				s.True(ok)
 				body := resp.Body.Bytes()
 
-				errorReturned := new(ErrorResponse)
+				errorReturned := new(internal.ErrorResponse)
 				s.NoError(jsoniter.Unmarshal(body, errorReturned))
 				s.Equal(errorReturned, t.expectedResp)
 			}
@@ -210,10 +213,10 @@ func (s *CalendarAPITestSuite) TestGetCalendarHandler() {
 		},
 		{
 			name: "Get calendar, userId not indicated (400)",
-			expectedResp: &ErrorResponse{
-				Err: ErrorBody{
+			expectedResp: &internal.ErrorResponse{
+				Err: internal.ErrorBody{
 					Status:  http.StatusBadRequest,
-					Message: ErrUserIDNotPresent.Error(),
+					Message: internal.ErrUserIDNotPresent.Error(),
 				},
 			},
 			expectedStatusCode: http.StatusBadRequest,
@@ -222,10 +225,10 @@ func (s *CalendarAPITestSuite) TestGetCalendarHandler() {
 		{
 			name:   "Get calendar, calendar not found (404)",
 			userID: "01FN3EEB2NVFJAHAPU00000099",
-			expectedResp: &ErrorResponse{
-				Err: ErrorBody{
+			expectedResp: &internal.ErrorResponse{
+				Err: internal.ErrorBody{
 					Status:  http.StatusNotFound,
-					Message: ErrCalendarNotFound.Error(),
+					Message: internal.ErrCalendarNotFound.Error(),
 				},
 			},
 			expectedStatusCode: http.StatusNotFound,
@@ -234,22 +237,22 @@ func (s *CalendarAPITestSuite) TestGetCalendarHandler() {
 	}
 	getEchoContext := func(userId string) echo.Context {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodGet, RouteCalendar, nil)
+		req := httptest.NewRequest(http.MethodGet, internal.RouteCalendar, nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		c.SetParamNames(ParamUserID)
+		c.SetParamNames(internal.ParamUserID)
 		c.SetParamValues(userId)
 		return c
 	}
 	for _, t := range tests {
 		s.Run(t.name, func() {
-			calendarManager := NewCalendarManager(*s.db)
+			calendarManager := managers.NewCalendarManager(*s.db)
 			api := CalendarAPI{DB: *s.db, Manager: calendarManager}
 
 			s.httpMock.On("GetAllMeals", t.userID).Return(mealsDb, nil).Once()
 			for i, meal := range mealsDb {
-				s.httpMock.On("GetMeal", t.userID, meal.Id).Return(MealToFront{Name: fmt.Sprintf("meal%d", i)}, nil)
+				s.httpMock.On("GetMeal", t.userID, meal.Id).Return(models.MealToFront{Name: fmt.Sprintf("meal%d", i)}, nil)
 			}
 
 			c := getEchoContext(t.userID)
@@ -261,7 +264,7 @@ func (s *CalendarAPITestSuite) TestGetCalendarHandler() {
 				s.True(ok)
 				body := resp.Body.Bytes()
 
-				errorReturned := new(ErrorResponse)
+				errorReturned := new(internal.ErrorResponse)
 				s.NoError(jsoniter.Unmarshal(body, errorReturned))
 				s.Equal(errorReturned, t.expectedResp)
 			}
@@ -283,7 +286,7 @@ func (s *CalendarAPITestSuite) TestPutCalendarHandler() {
 		{
 			name:   "Update calendar (ok)",
 			userID: "01FN3EEB2NVFJAHAPU00000002",
-			reqBody: Calendar{
+			reqBody: models.Calendar{
 				MealId: "01FN3EEB2NVFJAHAPM00000010",
 				Date:   time.Now().Format("2006/01/02"),
 			},
@@ -292,10 +295,10 @@ func (s *CalendarAPITestSuite) TestPutCalendarHandler() {
 		},
 		{
 			name: "Update meal, userId not indicated (400)",
-			expectedResp: &ErrorResponse{
-				Err: ErrorBody{
+			expectedResp: &internal.ErrorResponse{
+				Err: internal.ErrorBody{
 					Status:  http.StatusBadRequest,
-					Message: ErrUserIDNotPresent.Error(),
+					Message: internal.ErrUserIDNotPresent.Error(),
 				},
 			},
 			expectedStatusCode: http.StatusBadRequest,
@@ -307,22 +310,22 @@ func (s *CalendarAPITestSuite) TestPutCalendarHandler() {
 		body, err := jsoniter.Marshal(request)
 		s.NoError(err)
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPut, RouteCalendar, bytes.NewBuffer(body))
+		req := httptest.NewRequest(http.MethodPut, internal.RouteCalendar, bytes.NewBuffer(body))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		c.SetParamNames(ParamUserID)
+		c.SetParamNames(internal.ParamUserID)
 		c.SetParamValues(userId)
 		return c
 	}
 	for _, t := range tests {
 		s.Run(t.name, func() {
-			calendarManager := NewCalendarManager(*s.db)
+			calendarManager := managers.NewCalendarManager(*s.db)
 			api := CalendarAPI{DB: *s.db, Manager: calendarManager}
 
 			s.httpMock.On("GetAllMeals", t.userID).Return(mealsDb, nil).Once()
 			for i, meal := range mealsDb {
-				s.httpMock.On("GetMeal", t.userID, meal.Id).Return(MealToFront{Name: fmt.Sprintf("meal%d", i)}, nil)
+				s.httpMock.On("GetMeal", t.userID, meal.Id).Return(models.MealToFront{Name: fmt.Sprintf("meal%d", i)}, nil)
 			}
 
 			c := getEchoContext(t.userID, t.reqBody)
@@ -334,7 +337,7 @@ func (s *CalendarAPITestSuite) TestPutCalendarHandler() {
 				s.True(ok)
 				body := resp.Body.Bytes()
 
-				errorReturned := new(ErrorResponse)
+				errorReturned := new(internal.ErrorResponse)
 				s.NoError(jsoniter.Unmarshal(body, errorReturned))
 				s.Equal(errorReturned, t.expectedResp)
 			}
@@ -359,10 +362,10 @@ func (s *CalendarAPITestSuite) TestDeleteCalendarHandler() {
 		},
 		{
 			name: "Delete calendar, userId not indicated (400)",
-			expectedResp: &ErrorResponse{
-				Err: ErrorBody{
+			expectedResp: &internal.ErrorResponse{
+				Err: internal.ErrorBody{
 					Status:  http.StatusBadRequest,
-					Message: ErrUserIDNotPresent.Error(),
+					Message: internal.ErrUserIDNotPresent.Error(),
 				},
 			},
 			expectedStatusCode: http.StatusBadRequest,
@@ -372,10 +375,10 @@ func (s *CalendarAPITestSuite) TestDeleteCalendarHandler() {
 		{
 			name:   "Calendar does not exist (404)",
 			userID: "01FN3EEB2NVFJAHAPU00000002",
-			expectedResp: &ErrorResponse{
-				Err: ErrorBody{
+			expectedResp: &internal.ErrorResponse{
+				Err: internal.ErrorBody{
 					Status:  http.StatusNotFound,
-					Message: ErrCalendarNotFound.Error(),
+					Message: internal.ErrCalendarNotFound.Error(),
 				},
 			},
 			expectedStatusCode: http.StatusNotFound,
@@ -384,21 +387,21 @@ func (s *CalendarAPITestSuite) TestDeleteCalendarHandler() {
 	}
 	getEchoContext := func(userId string) echo.Context {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodDelete, RouteCalendar, nil)
+		req := httptest.NewRequest(http.MethodDelete, internal.RouteCalendar, nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		c.SetParamNames(ParamUserID)
+		c.SetParamNames(internal.ParamUserID)
 		c.SetParamValues(userId)
 		return c
 	}
 	for _, t := range tests {
 		s.Run(t.name, func() {
-			calendarManager := NewCalendarManager(*s.db)
+			calendarManager := managers.NewCalendarManager(*s.db)
 			api := CalendarAPI{DB: *s.db, Manager: calendarManager}
 			s.httpMock.On("GetAllMeals", t.userID).Return(mealsDb, nil).Once()
 			for i, meal := range mealsDb {
-				s.httpMock.On("GetMeal", t.userID, meal.Id).Return(MealToFront{Name: fmt.Sprintf("meal%d", i)}, nil)
+				s.httpMock.On("GetMeal", t.userID, meal.Id).Return(models.MealToFront{Name: fmt.Sprintf("meal%d", i)}, nil)
 			}
 			c := getEchoContext(t.userID)
 			err := api.DeleteCalendarHandler(c)
@@ -409,7 +412,7 @@ func (s *CalendarAPITestSuite) TestDeleteCalendarHandler() {
 				s.True(ok)
 				body := resp.Body.Bytes()
 
-				errorReturned := new(ErrorResponse)
+				errorReturned := new(internal.ErrorResponse)
 				s.NoError(jsoniter.Unmarshal(body, errorReturned))
 				s.Equal(errorReturned, t.expectedResp)
 			}

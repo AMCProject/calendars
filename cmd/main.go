@@ -3,6 +3,8 @@ package main
 import (
 	"calendar/internal"
 	"calendar/internal/config"
+	"calendar/internal/handlers"
+	"calendar/internal/managers"
 	"calendar/pkg/database"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -51,9 +53,9 @@ func setUpServer(db *database.Database) *echo.Echo {
 
 func addRoutes(e *echo.Echo, db database.Database) {
 
-	calendarManager := internal.NewCalendarManager(db)
+	calendarManager := managers.NewCalendarManager(db)
 
-	calendarAPI := internal.CalendarAPI{DB: db, Manager: calendarManager}
+	calendarAPI := handlers.CalendarAPI{DB: db, Manager: calendarManager}
 	e.GET(internal.RouteCalendar, calendarAPI.GetCalendarHandler)
 	e.POST(internal.RouteCalendar, calendarAPI.PostCalendarHandler)
 	e.PUT(internal.RouteCalendar, calendarAPI.PutCalendarHandler)

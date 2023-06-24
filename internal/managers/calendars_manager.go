@@ -1,6 +1,10 @@
-package internal
+package managers
 
 import (
+	"calendar/internal"
+	"calendar/internal/models"
+	"calendar/internal/repositories"
+	"calendar/internal/utils"
 	"calendar/pkg/database"
 	"github.com/go-playground/validator/v10"
 	"strings"
@@ -8,31 +12,31 @@ import (
 )
 
 type ICalendarManager interface {
-	GetCalendar(id string) (calendar []Calendar, err error)
-	UpdateCalendar(id string, calendar Calendar) (calendarResponse []Calendar, err error)
-	UpdateDaysCalendar(id string, dates UpdateWeekCalendar) (calendar []Calendar, err error)
-	CreateCalendar(id string) (calendar []Calendar, err error)
+	GetCalendar(id string) (calendar []models.Calendar, err error)
+	UpdateCalendar(id string, calendar models.Calendar) (calendarResponse []models.Calendar, err error)
+	UpdateDaysCalendar(id string, dates models.UpdateWeekCalendar) (calendar []models.Calendar, err error)
+	CreateCalendar(id string) (calendar []models.Calendar, err error)
 	DeleteCalendar(id string) (err error)
-	GetFrontCalendar(calendar []Calendar) (finalCal []Calendar, err error)
+	GetFrontCalendar(calendar []models.Calendar) (finalCal []models.Calendar, err error)
 }
 
-var Microservices EndpointsI = &Endpoints{}
+var Microservices utils.EndpointsI = &utils.Endpoints{}
 
 type CalendarManager struct {
-	db       *SQLiteCalendarRepository
+	db       *repositories.SQLiteCalendarRepository
 	validate *validator.Validate
-	utils    *CalendarTools
+	utils    *utils.CalendarTools
 }
 
 func NewCalendarManager(db database.Database) *CalendarManager {
 	return &CalendarManager{
-		db:       NewSQLiteCalendarRepository(&db),
+		db:       repositories.NewSQLiteCalendarRepository(&db),
 		validate: validator.New(),
-		utils:    NewCalendarToolsManager(),
+		utils:    utils.NewCalendarToolsManager(),
 	}
 }
 
-func (c *CalendarManager) GetCalendar(id string) (calendar []Calendar, err error) {
+func (c *CalendarManager) GetCalendar(id string) (calendar []models.Calendar, err error) {
 	calendar, err = c.db.GetCalendar(id)
 	if err != nil {
 		return
@@ -67,21 +71,21 @@ func (c *CalendarManager) GetCalendar(id string) (calendar []Calendar, err error
 			calendar = calendar[len(calendar)+28:]
 		}
 		if err = c.db.DeleteCalendar(id); err != nil {
-			return []Calendar{}, ErrSomethingWentWrong
+			return []models.Calendar{}, internal.ErrSomethingWentWrong
 		}
 		if err = c.db.CreateCalendar(calendar); err != nil {
-			return []Calendar{}, ErrSomethingWentWrong
+			return []models.Calendar{}, internal.ErrSomethingWentWrong
 		}
 	}
 
 	return
 }
 
-func (c *CalendarManager) UpdateCalendar(id string, calendar Calendar) (calendarResponse []Calendar, err error) {
-	var meal MealToFront
+func (c *CalendarManager) UpdateCalendar(id string, calendar models.Calendar) (calendarResponse []models.Calendar, err error) {
+	var meal models.MealToFront
 	_, err = time.Parse("2006/01/02", calendar.Date)
 	if err != nil {
-		return []Calendar{}, ErrInvalidDateFormat
+		return []models.Calendar{}, internal.ErrInvalidDateFormat
 	}
 	if _, err = c.db.GetCalendarSpecificDate(id, calendar.Date); err != nil {
 		return
@@ -99,18 +103,18 @@ func (c *CalendarManager) UpdateCalendar(id string, calendar Calendar) (calendar
 	return c.db.GetCalendar(id)
 }
 
-func (c *CalendarManager) UpdateDaysCalendar(id string, dates UpdateWeekCalendar) (calendar []Calendar, err error) {
+func (c *CalendarManager) UpdateDaysCalendar(id string, dates models.UpdateWeekCalendar) (calendar []models.Calendar, err error) {
 	calendar, err = c.db.GetCalendar(id)
 	if err != nil {
-		return []Calendar{}, err
+		return []models.Calendar{}, err
 	}
 	_, err = time.Parse("2006/01/02", dates.From)
 	if err != nil {
-		return []Calendar{}, ErrInvalidDateFormat
+		return []models.Calendar{}, internal.ErrInvalidDateFormat
 	}
 	_, err = time.Parse("2006/01/02", dates.To)
 	if err != nil {
-		return []Calendar{}, ErrInvalidDateFormat
+		return []models.Calendar{}, internal.ErrInvalidDateFormat
 	}
 	if _, err = c.db.GetCalendarSpecificDate(id, dates.From); err != nil {
 		return nil, err
@@ -124,20 +128,20 @@ func (c *CalendarManager) UpdateDaysCalendar(id string, dates UpdateWeekCalendar
 	}
 	finalCal, err := c.utils.UpdateDaysInCalendar(id, calendar, meals, dates)
 	if err != nil {
-		return []Calendar{}, err
+		return []models.Calendar{}, err
 	}
 	if err = c.db.DeleteCalendar(id); err != nil {
-		return []Calendar{}, ErrSomethingWentWrong
+		return []models.Calendar{}, internal.ErrSomethingWentWrong
 	}
 	if err = c.db.CreateCalendar(finalCal); err != nil {
-		return []Calendar{}, ErrSomethingWentWrong
+		return []models.Calendar{}, internal.ErrSomethingWentWrong
 	}
 	return finalCal, err
 }
 
-func (c *CalendarManager) CreateCalendar(id string) (calendar []Calendar, err error) {
+func (c *CalendarManager) CreateCalendar(id string) (calendar []models.Calendar, err error) {
 	if _, err = c.db.GetCalendar(id); err == nil {
-		return []Calendar{}, ErrCalendarAlreadyExists
+		return []models.Calendar{}, internal.ErrCalendarAlreadyExists
 	}
 	meals, err := Microservices.GetAllMeals(id)
 	if err != nil {
@@ -161,16 +165,16 @@ func (c *CalendarManager) DeleteCalendar(id string) (err error) {
 	return c.db.DeleteCalendar(id)
 }
 
-func (c *CalendarManager) GetFrontCalendar(calendar []Calendar) (finalCal []Calendar, err error) {
+func (c *CalendarManager) GetFrontCalendar(calendar []models.Calendar) (finalCal []models.Calendar, err error) {
 	diff := 28 - len(calendar)
 	firstDate, _ := time.Parse("2006/01/02", calendar[0].Date)
 	for i := 0; i < diff; i++ {
 		noMealDate := firstDate.AddDate(0, 0, -(diff - i))
-		calAux := Calendar{MealId: "", Name: "NO MEAL", Date: noMealDate.Format("2006/01/02")}
+		calAux := models.Calendar{MealId: "", Name: "NO MEAL", Date: noMealDate.Format("2006/01/02")}
 		finalCal = append(finalCal, calAux)
 	}
 	for _, cal := range calendar {
-		calAux := Calendar{MealId: cal.MealId, UserId: cal.UserId, Date: cal.Date, Name: cal.Name}
+		calAux := models.Calendar{MealId: cal.MealId, UserId: cal.UserId, Date: cal.Date, Name: cal.Name}
 		finalCal = append(finalCal, calAux)
 	}
 	return

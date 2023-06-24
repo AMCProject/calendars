@@ -1,6 +1,7 @@
-package internal
+package utils
 
 import (
+	"calendar/internal/models"
 	"math"
 	"math/rand"
 	"strings"
@@ -10,12 +11,12 @@ import (
 type CalendarTools struct{}
 
 type ICalendarTools interface {
-	CalendarCreator(userId string, meals []*MealToFront) (calendar []Calendar, err error)
-	UpdateDaysInCalendar(d string, calendar []Calendar, meals []*MealToFront, dates UpdateWeekCalendar) (finalCalendar []Calendar, err error)
-	UpdateNewDays(userId string, calendar []Calendar, meals []*MealToFront, days int) (finalCalendar []Calendar, err error)
-	ReturnRandomMeal(calendar []Calendar, meals []*MealToFront, wd int) (meal MealToFront)
-	CalendarContains(calendar []Calendar, mealId string) (distance float64)
-	SpecialMeal(meal *MealToFront, numb float64, wd int) (res float64)
+	CalendarCreator(userId string, meals []*models.MealToFront) (calendar []models.Calendar, err error)
+	UpdateDaysInCalendar(d string, calendar []models.Calendar, meals []*models.MealToFront, dates models.UpdateWeekCalendar) (finalCalendar []models.Calendar, err error)
+	UpdateNewDays(userId string, calendar []models.Calendar, meals []*models.MealToFront, days int) (finalCalendar []models.Calendar, err error)
+	ReturnRandomMeal(calendar []models.Calendar, meals []*models.MealToFront, wd int) (meal models.MealToFront)
+	CalendarContains(calendar []models.Calendar, mealId string) (distance float64)
+	SpecialMeal(meal *models.MealToFront, numb float64, wd int) (res float64)
 	GetHighestMeal(keyMeal []float64) (index int)
 }
 
@@ -23,7 +24,7 @@ func NewCalendarToolsManager() *CalendarTools {
 	return &CalendarTools{}
 }
 
-func (s *CalendarTools) CalendarCreator(userId string, meals []*MealToFront) (calendar []Calendar, err error) {
+func (s *CalendarTools) CalendarCreator(userId string, meals []*models.MealToFront) (calendar []models.Calendar, err error) {
 	var days int
 	t := time.Now()
 	wd := t.Weekday()
@@ -35,7 +36,7 @@ func (s *CalendarTools) CalendarCreator(userId string, meals []*MealToFront) (ca
 	for i := 0; i <= days; i++ {
 		newDate := t.AddDate(0, 0, i)
 		meal := s.ReturnRandomMeal(calendar, meals, int(newDate.Weekday()))
-		cal := Calendar{
+		cal := models.Calendar{
 			UserId: userId,
 			MealId: meal.Id,
 			Name:   meal.Name,
@@ -47,7 +48,7 @@ func (s *CalendarTools) CalendarCreator(userId string, meals []*MealToFront) (ca
 	return
 }
 
-func (s *CalendarTools) UpdateDaysInCalendar(id string, calendar []Calendar, meals []*MealToFront, dates UpdateWeekCalendar) (finalCalendar []Calendar, err error) {
+func (s *CalendarTools) UpdateDaysInCalendar(id string, calendar []models.Calendar, meals []*models.MealToFront, dates models.UpdateWeekCalendar) (finalCalendar []models.Calendar, err error) {
 	var inRange bool
 	finalCalendar = calendar
 	for i, c := range finalCalendar {
@@ -59,7 +60,7 @@ func (s *CalendarTools) UpdateDaysInCalendar(id string, calendar []Calendar, mea
 		}
 		weekDay, _ := time.Parse("2006/01/02", c.Date)
 		meal := s.ReturnRandomMeal(calendar, meals, int(weekDay.Weekday()))
-		finalCalendar[i] = Calendar{
+		finalCalendar[i] = models.Calendar{
 			UserId: id,
 			MealId: meal.Id,
 			Name:   meal.Name,
@@ -72,7 +73,7 @@ func (s *CalendarTools) UpdateDaysInCalendar(id string, calendar []Calendar, mea
 	return
 }
 
-func (s *CalendarTools) UpdateNewDays(userId string, calendar []Calendar, meals []*MealToFront, days int) (finalCalendar []Calendar, err error) {
+func (s *CalendarTools) UpdateNewDays(userId string, calendar []models.Calendar, meals []*models.MealToFront, days int) (finalCalendar []models.Calendar, err error) {
 	finalCalendar = calendar
 	if len(calendar) >= 28 {
 		finalCalendar = calendar[days:]
@@ -81,7 +82,7 @@ func (s *CalendarTools) UpdateNewDays(userId string, calendar []Calendar, meals 
 	for i := 0; i < days; i++ {
 		newDate := t.AddDate(0, 0, i+1)
 		meal := s.ReturnRandomMeal(finalCalendar, meals, int(newDate.Weekday()))
-		cal := Calendar{
+		cal := models.Calendar{
 			UserId: userId,
 			MealId: meal.Id,
 			Name:   meal.Name,
@@ -93,13 +94,13 @@ func (s *CalendarTools) UpdateNewDays(userId string, calendar []Calendar, meals 
 	return
 }
 
-func (s *CalendarTools) ReturnRandomMeal(calendar []Calendar, meals []*MealToFront, wd int) (meal MealToFront) {
+func (s *CalendarTools) ReturnRandomMeal(calendar []models.Calendar, meals []*models.MealToFront, wd int) (meal models.MealToFront) {
 	var keyMeal []float64
 	for _, m := range meals {
 		numb := math.Abs(rand.Float64() * 3)
 		distance := s.CalendarContains(calendar, m.Id)
 		if distance == 1 {
-			numb = -15.0
+			numb = numb - 20
 		}
 		if distance > 0 {
 			numb = numb - 1.9 + ((distance / float64(len(calendar))) / 4)
@@ -108,7 +109,7 @@ func (s *CalendarTools) ReturnRandomMeal(calendar []Calendar, meals []*MealToFro
 			numb += 0.8
 		}
 		numb = s.SpecialMeal(m, numb, wd)
-		if strings.EqualFold(m.Type, Semanal) && (distance >= 7 || distance == 0) {
+		if strings.EqualFold(m.Type, models.Semanal) && (distance >= 7 || distance == 0) {
 			if distance == 0 {
 				numb += 1.2
 			} else {
@@ -122,7 +123,7 @@ func (s *CalendarTools) ReturnRandomMeal(calendar []Calendar, meals []*MealToFro
 	return
 }
 
-func (s *CalendarTools) CalendarContains(calendar []Calendar, mealId string) (distance float64) {
+func (s *CalendarTools) CalendarContains(calendar []models.Calendar, mealId string) (distance float64) {
 	var contains bool
 	for i, c := range calendar {
 		if c.MealId == mealId {
@@ -136,12 +137,12 @@ func (s *CalendarTools) CalendarContains(calendar []Calendar, mealId string) (di
 	return
 }
 
-func (s *CalendarTools) SpecialMeal(meal *MealToFront, numb float64, wd int) (res float64) {
+func (s *CalendarTools) SpecialMeal(meal *models.MealToFront, numb float64, wd int) (res float64) {
 	res = numb
-	if strings.EqualFold(meal.Type, Ocasional) && (wd == 0 || wd == 6) {
+	if strings.EqualFold(meal.Type, models.Ocasional) && (wd == 0 || wd == 6) {
 		res += 2.10
 	}
-	if strings.EqualFold(meal.Type, Ocasional) && (wd > 0 && wd < 6) {
+	if strings.EqualFold(meal.Type, models.Ocasional) && (wd > 0 && wd < 6) {
 		res -= 2.9
 	}
 	return res
