@@ -68,7 +68,7 @@ func (c *CalendarManager) GetCalendar(id string) (calendar []models.Calendar, er
 		//_ = s.Repository.DeleteCalendar(id)
 		calendar, err = c.utils.UpdateNewDays(id, calendar, meals, days)
 		if len(calendar) > 28 {
-			calendar = calendar[len(calendar)+28:]
+			calendar = calendar[len(calendar)-28:]
 		}
 		if err = c.db.DeleteCalendar(id); err != nil {
 			return []models.Calendar{}, internal.ErrSomethingWentWrong

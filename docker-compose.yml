@@ -10,3 +10,12 @@ services:
     restart: unless-stopped
     ports:
       - "3300:3300"
+    networks:
+      - amc-network
+networks:
+  amc-network:
+    name: amc-network
+    ipam:
+      config:
+        - subnet: "172.25.0.0/24"
+          gateway: "172.25.0.1"
