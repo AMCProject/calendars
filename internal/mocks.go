@@ -9,11 +9,6 @@ type EndpointsMock struct {
 	mock.Mock
 }
 
-func (e *EndpointsMock) GetUser(userId string) (user models.User, err error) {
-	args := e.Called(userId)
-	return args.Get(0).(models.User), args.Error(1)
-}
-
 func (e *EndpointsMock) GetAllMeals(userId string) (meals []*models.MealToFront, err error) {
 	args := e.Called(userId)
 	return args.Get(0).([]*models.MealToFront), args.Error(1)

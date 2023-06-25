@@ -35,7 +35,7 @@ func (s *CalendarTools) CalendarCreator(userId string, meals []*models.MealToFro
 	}
 	for i := 0; i <= days; i++ {
 		newDate := t.AddDate(0, 0, i)
-		meal := s.ReturnRandomMeal(calendar, meals, int(newDate.Weekday()))
+		meal := s.ReturnRandomMeal(calendar, meals, newDate)
 		cal := models.Calendar{
 			UserId: userId,
 			MealId: meal.Id,
@@ -58,8 +58,8 @@ func (s *CalendarTools) UpdateDaysInCalendar(id string, calendar []models.Calend
 		if !inRange {
 			continue
 		}
-		weekDay, _ := time.Parse("2006/01/02", c.Date)
-		meal := s.ReturnRandomMeal(calendar, meals, int(weekDay.Weekday()))
+		updateDay, _ := time.Parse("2006/01/02", c.Date)
+		meal := s.ReturnRandomMeal(finalCalendar, meals, updateDay)
 		finalCalendar[i] = models.Calendar{
 			UserId: id,
 			MealId: meal.Id,
@@ -81,7 +81,7 @@ func (s *CalendarTools) UpdateNewDays(userId string, calendar []models.Calendar,
 	t, _ := time.Parse("2006/01/02", finalCalendar[len(finalCalendar)-1].Date)
 	for i := 0; i < days; i++ {
 		newDate := t.AddDate(0, 0, i+1)
-		meal := s.ReturnRandomMeal(finalCalendar, meals, int(newDate.Weekday()))
+		meal := s.ReturnRandomMeal(finalCalendar, meals, newDate)
 		cal := models.Calendar{
 			UserId: userId,
 			MealId: meal.Id,
@@ -94,21 +94,24 @@ func (s *CalendarTools) UpdateNewDays(userId string, calendar []models.Calendar,
 	return
 }
 
-func (s *CalendarTools) ReturnRandomMeal(calendar []models.Calendar, meals []*models.MealToFront, wd int) (meal models.MealToFront) {
+func (s *CalendarTools) ReturnRandomMeal(calendar []models.Calendar, meals []*models.MealToFront, date time.Time) (meal models.MealToFront) {
 	var keyMeal []float64
 	for _, m := range meals {
 		numb := math.Abs(rand.Float64() * 3)
-		distance := s.CalendarContains(calendar, m.Id)
+		contains, distance := s.CalendarContains(calendar, m.Id, date)
 		if distance == 1 {
 			numb = numb - 20
 		}
 		if distance > 0 {
 			numb = numb - 1.9 + ((distance / float64(len(calendar))) / 4)
 		}
-		if distance == 0 {
+		if distance == 0 && !contains {
 			numb += 0.8
 		}
-		numb = s.SpecialMeal(m, numb, wd)
+		if distance == 0 && contains {
+			numb = numb - 20
+		}
+		numb = s.SpecialMeal(m, numb, int(date.Weekday()))
 		if strings.EqualFold(m.Type, models.Semanal) && (distance >= 7 || distance == 0) {
 			if distance == 0 {
 				numb += 1.2
@@ -123,16 +126,20 @@ func (s *CalendarTools) ReturnRandomMeal(calendar []models.Calendar, meals []*mo
 	return
 }
 
-func (s *CalendarTools) CalendarContains(calendar []models.Calendar, mealId string) (distance float64) {
-	var contains bool
-	for i, c := range calendar {
+func (s *CalendarTools) CalendarContains(calendar []models.Calendar, mealId string, date time.Time) (contains bool, distance float64) {
+	distance = 100
+	for _, c := range calendar {
 		if c.MealId == mealId {
 			contains = true
-			distance = float64(i)
+			compareDate, _ := time.Parse("2006/01/02", c.Date)
+			difference := math.Abs(date.Sub(compareDate).Hours() / 24)
+			if difference < distance {
+				distance = difference
+			}
 		}
 	}
-	if contains {
-		distance = float64(len(calendar)) - distance
+	if !contains {
+		distance = 0
 	}
 	return
 }
