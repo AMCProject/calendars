@@ -31,6 +31,9 @@ func (e *Endpoints) GetAllMeals(userId string) (meals []*models.MealToFront, err
 		return []*models.MealToFront{}, internal.ErrReturningAllMeals
 	}
 	response, err := httpClient.Do(request)
+	if response.StatusCode == 404 {
+		return []*models.MealToFront{}, nil
+	}
 	if response.StatusCode > 299 {
 		newError := new(internal.ErrorResponse)
 		err = json.NewDecoder(response.Body).Decode(&newError)

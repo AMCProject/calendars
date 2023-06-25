@@ -57,6 +57,12 @@ func (c *CalendarManager) GetCalendar(id string) (calendar []models.Calendar, er
 		if errM != nil {
 			return calendar, errM
 		}
+		if len(meals) == 0 {
+			if err = c.db.DeleteCalendar(id); err != nil {
+				return []models.Calendar{}, internal.ErrSomethingWentWrong
+			}
+			return []models.Calendar{}, internal.ErrMealsNotFound
+		}
 		lastD, errF := time.Parse("2006/01/02", calendar[len(calendar)-1].Date)
 		if errF != nil {
 			return calendar, errF
@@ -126,6 +132,12 @@ func (c *CalendarManager) UpdateDaysCalendar(id string, dates models.UpdateWeekC
 	if err != nil {
 		return
 	}
+	if len(meals) == 0 {
+		if err = c.db.DeleteCalendar(id); err != nil {
+			return []models.Calendar{}, internal.ErrSomethingWentWrong
+		}
+		return []models.Calendar{}, internal.ErrMealsNotFound
+	}
 	finalCal, err := c.utils.UpdateDaysInCalendar(id, calendar, meals, dates)
 	if err != nil {
 		return []models.Calendar{}, err
@@ -144,6 +156,12 @@ func (c *CalendarManager) CreateCalendar(id string) (calendar []models.Calendar,
 		return []models.Calendar{}, internal.ErrCalendarAlreadyExists
 	}
 	meals, err := Microservices.GetAllMeals(id)
+	if len(meals) == 0 {
+		if err = c.db.DeleteCalendar(id); err != nil {
+			return []models.Calendar{}, internal.ErrSomethingWentWrong
+		}
+		return []models.Calendar{}, internal.ErrMealsNotFound
+	}
 	if err != nil {
 		return
 	}

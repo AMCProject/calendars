@@ -49,6 +49,7 @@ var errorsMap = map[string]ErrorBody{
 	ErrCalendarNotFound.Error():      {Status: http.StatusNotFound, Message: ErrCalendarNotFound.Error()},
 	ErrUserNotFound.Error():          {Status: http.StatusNotFound, Message: ErrUserNotFound.Error()},
 	ErrMealNotFound.Error():          {Status: http.StatusNotFound, Message: ErrMealNotFound.Error()},
+	ErrMealsNotFound.Error():         {Status: http.StatusNotFound, Message: ErrMealsNotFound.Error()},
 	ErrDateNotFound.Error():          {Status: http.StatusNotFound, Message: ErrDateNotFound.Error()},
 	ErrCalendarAlreadyExists.Error(): {Status: http.StatusConflict, Message: ErrCalendarAlreadyExists.Error()},
 	ErrSomethingWentWrong.Error():    {Status: http.StatusInternalServerError, Message: ErrSomethingWentWrong.Error()},
@@ -64,6 +65,7 @@ var (
 	ErrCalendarAlreadyExists = errors.New("este usuario ya tiene un calendario")
 	ErrUserNotFound          = errors.New("usuario no encontrado")
 	ErrMealNotFound          = errors.New("comida no encontrada")
+	ErrMealsNotFound         = errors.New("no hay comidas registradas")
 	ErrReturningAllMeals     = errors.New("error inesperado recuperando las comidas")
 	ErrReturningMeal         = errors.New("error inesperado recuperando la información de la comida")
 	ErrReturningUser         = errors.New("error inesperado recuperando la información del usuario")
